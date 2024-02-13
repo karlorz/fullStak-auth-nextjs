@@ -8,7 +8,7 @@ async function refreshToken(token: JWT): Promise<JWT> {
   const res = await fetch(Backend_URL + "/auth/refresh", {
     method: "POST",
     headers: {
-      authorization: `Refresh ${token.backendTokens.refreshToken}`,
+      authorization: `Refresh ${token.refresh_token}`,
     },
   });
   console.log("refreshed");
@@ -36,11 +36,11 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials, req) {
         if (!credentials?.username || !credentials?.password) return null;
         const { username, password } = credentials;
-        const res = await fetch(Backend_URL + "/auth/login", {
+        const res = await fetch(Backend_URL + "/api/v1/auth/authenticate", {
           method: "POST",
           body: JSON.stringify({
-            username,
-            password,
+            email: username,
+            password: password
           }),
           headers: {
             "Content-Type": "application/json",
@@ -52,6 +52,7 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
         const user = await res.json();
+        console.log(user);
         return user;
       },
     }),
@@ -59,9 +60,10 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user }) {
+      // console.log(user);
       if (user) return { ...token, ...user };
 
-      if (new Date().getTime() < token.backendTokens.expiresIn)
+      if (new Date().getTime() < token.expired_at)
         return token;
 
       return await refreshToken(token);
@@ -69,7 +71,7 @@ export const authOptions: NextAuthOptions = {
 
     async session({ token, session }) {
       session.user = token.user;
-      session.backendTokens = token.backendTokens;
+      session.access_token = token.access_token;
 
       return session;
     },

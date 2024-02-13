@@ -13,7 +13,7 @@ const ProfilePage = async (props: Props) => {
   const response = await fetch(Backend_URL + `/user/${props.params.id}`, {
     method: "GET",
     headers: {
-      authorization: `Bearer ${session?.backendTokens.accessToken}`,
+      authorization: `Bearer ${session?.access_token}`,
       "Content-Type": "application/json",
     },
   });
